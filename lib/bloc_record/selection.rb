@@ -2,26 +2,33 @@ require 'sqlite3'
 
 module Selection
   def find(*ids)
-
     if ids.length == 1
       find_one(ids.first)
     else
-      rows = connection.execute <<-SQL
-        SELECT #{columns.join ","} FROM #{table}
-        WHERE id IN (#{ids.join ","});
-      SQL
+      if validate_id(ids)
+        rows = connection.execute <<-SQL
+          SELECT #{columns.join ","} FROM #{table}
+          WHERE id IN (#{ids.join ","});
+        SQL
 
-      rows_to_array(rows)
+        rows_to_array(rows)
+      else
+        nil
+      end
     end
   end
 
   def find_one(id)
-    row = connection.get_first_row <<-SQL
-      SELECT #{columns.join ","} FROM #{table}
-      WHERE id = #{id};
-    SQL
+    if validate_id(id)
+      row = connection.get_first_row <<-SQL
+        SELECT #{columns.join ","} FROM #{table}
+        WHERE id = #{id};
+      SQL
 
-    init_object_from_row(row)
+      init_object_from_row(row)
+    else
+      nil
+    end
   end
 
   def find_by(attribute, value)
@@ -31,6 +38,23 @@ module Selection
     SQL
 
     init_object_from_row(row)
+  end
+
+  def find_each(options={})
+    row = connection.get_first_row <<-SQL
+      SELECT #{columns.join ","} FROM #{table}
+      LIMIT #{options['batch_size']};
+    SQL
+
+    init_object_from_row(row)
+  end
+
+  def method_missing(method, *args, &block)
+    if method.to_s == /^find_by_(.*)$/ && columns.include?(method.to_s)
+      find_by(method.to_s, args.first)
+    else
+      puts "The column #{method.to_s} does not exist."
+    end
   end
 
   def take(num=1)
@@ -94,4 +118,15 @@ module Selection
   def rows_to_array(rows)
     rows.map { |row| new(Hash[columns.zip(row)]) }
   end
+
+  def validate_id(*ids)
+    ids.each do |id|
+      if id < 0 || id.to_i != id
+        puts "Invalid id: #{id}."
+        false
+      end
+    end
+    true
+  end
+
 end
