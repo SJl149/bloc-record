@@ -54,21 +54,21 @@ module Persistence
 
   def where(*args)
     if args.count > 1
-      experession = args.shift
+      expression = args.shift
       params = args
     else
       case args.first
       when String
-        experession = args.first
+        expression = args.first
       when Hash
-        experession_hash = BlocRecord::Utility.convert_keys(args.first)
-        experession = experession_hash.map { |key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
+        expression_hash = BlocRecord::Utility.convert_keys(args.first)
+        expression = expression_hash.map { |key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
       end
     end
 
     sql = <<-SQL
       SELECT #{columns.join ","} FROM #{table}
-      WHERE #{experession};
+      WHERE #{expression};
     SQL
 
     rows = connection.execute(sql, params)
@@ -76,7 +76,7 @@ module Persistence
   end
 
   def not
-    
+
   end
 
   def update_attribute(attribute, value)
