@@ -75,8 +75,16 @@ module Persistence
     rows_to_array(rows)
   end
 
-  def not
-
+  def not(arg)
+    case arg
+    when String
+      expression = arg
+    when Hash
+      expression_hash = BlocRecord::Utility.convert_keys(arg)
+      expression = expression_hash.map { |key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" AND ")
+    end
+    
+    "NOT " + expression
   end
 
   def update_attribute(attribute, value)
