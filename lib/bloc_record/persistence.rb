@@ -40,6 +40,10 @@ module Persistence
     self.class.destroy(self.id)
   end
 
+  def destroy_all
+    self.class.destroy_all
+  end
+
   module ClassMethods
     def create(attrs)
       attrs = BlocRecord::Utility.convert_keys(attrs)
@@ -94,10 +98,20 @@ module Persistence
       true
     end
 
-    def destroy_all(conditions_hash=nil)
-      if conditions_hash && !conditions_hash.empty?
-        conditions_hash = BlocRecord::Utility.convert_keys(conditions_hash)
-        conditions = conditions_hash.map { |key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" AND ")
+    def destroy_all(*args)
+      if args
+        if args.count > 1
+          conditions = args.shift
+          conditions.tr!('?', args.first)
+        else
+          case args.first
+          when String
+            conditions = args.first
+          when Hash
+            conditions_hash = BlocRecord::Utility.convert_keys(args.first)
+            conditions = conditions_hash.map { |key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" AND ")
+          end
+        end
 
         connection.execute <<-SQL
           DELETE FROM #{table}
@@ -111,5 +125,6 @@ module Persistence
 
       true
     end
+
   end
 end
