@@ -7,11 +7,11 @@ module Selection
     if ids.length == 1
       find_one(ids.first)
     else
-      rows = connection.execute <<-SQL
+      sql = <<-SQL
         SELECT #{columns.join ","} FROM #{table}
         WHERE id IN (#{ids.join ","});
       SQL
-
+      rows = connection.exec_query(sql)
       rows_to_array(rows)
     end
   end
@@ -36,11 +36,12 @@ module Selection
 
   def take(num=1)
     if num > 1
-      rows = connection.execute <<-SQL
+      sql = <<-SQL
         SELECT #{columns.join ","} FROM #{table}
         ORDER BY random()
         LIMIT #{num};
       SQL
+      rows = connection.exec_query(sql)
 
       rows_to_array(rows)
     else
@@ -77,9 +78,10 @@ module Selection
   end
 
   def all
-    rows = connection.execute <<-SQL
+    sql = <<-SQL
       SELECT #{columns.join ","} FROM #{table};
     SQL
+    rows = connection.exec_query(sql)
 
     rows_to_array(rows)
   end
@@ -103,7 +105,7 @@ module Selection
       WHERE #{experession};
     SQL
 
-    rows = connection.execute(sql, params)
+    rows = connection.exec_query_params(sql, params)
     rows_to_array(rows)
   end
 
@@ -114,10 +116,11 @@ module Selection
       order = args.first.to_s
     end
 
-    rows = connection.execute <<-SQL
+    sql = <<-SQL
       SELECT * FROM #{table}
       ORDER BY #{order};
     SQL
+    rows = connection.exec_query(sql)
 
     rows_to_array(rows)
   end
@@ -125,20 +128,23 @@ module Selection
   def join(*args)
     if args.count > 1
       joins = args.map { |arg| "INNER JOIN #{arg} ON #{arg}.#{table}_id = #{table}.id"}.join(" ")
-      rows = connection.execute <<-SQL
+      sql = <<-SQL
         SELECT * FROM #{table} #{joins};
       SQL
+      rows = connection.exec_query(sql)
     else
       case args.first
       when String
-        rows = connection.execute <<-SQL
+        sql = <<-SQL
           SELECT * FROM #{table} #{BlocRecord::Utility.sql_strings(args.first)};
         SQL
+        rows = connection.exec_query(sql)
       when Symbol
-        rows = connection.execute <<-SQL
+        sql = <<-SQL
           SELECT * FROM #{table}
           INNER JOIN #{args.first} ON #{args.first}.#{table}_id = #{table}.id
         SQL
+        rows = connection.exec_query(sql)
       end
     end
 
