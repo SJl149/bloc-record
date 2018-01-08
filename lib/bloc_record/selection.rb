@@ -17,19 +17,23 @@ module Selection
   end
 
   def find_one(id)
-    row = connection.get_first_row <<-SQL
+    sql = <<-SQL
       SELECT #{columns.join ","} FROM #{table}
-      WHERE id = #{id};
+      WHERE id = #{id}
+      LIMIT 1;
     SQL
+    row = connection.exec_query(sql)
 
     init_object_from_row(row)
   end
 
   def find_by(attribute, value)
-    row = connection.get_first_row <<-SQL
+    sql = <<-SQL
       SELECT #{columns.join ","} FROM #{table}
-      WHERE #{attribute} = #{BlocRecord::Utility.sql_strings(value)};
+      WHERE #{attribute} = #{BlocRecord::Utility.sql_strings(value)}
+      LIMIT 1;
     SQL
+    row = connection.exec_query(sql)
 
     init_object_from_row(row)
   end
@@ -50,29 +54,32 @@ module Selection
   end
 
   def take_one
-    row = connection.get_first_row <<-SQL
+    sql = <<-SQL
       SELECT #{columns.join ","} FROM #{table}
       ORDER BY random()
       LIMIT 1;
     SQL
+    row = connection.exec_query(sql)
 
     init_object_from_row(row)
   end
 
   def first
-    row = connection.get_first_row <<-SQL
+    sql = <<-SQL
       SELECT #{columns.join ","} FROM #{table}
       ORDER BY id ASC LIMIT 1;
     SQL
+    row = connection.exec_query(sql)
 
     init_object_from_row(row)
   end
 
   def last
-    row = connection.get_first_row <<-SQL
+    sql = <<-SQL
       SELECT #{columns.join ","} FROM #{table}
       ORDER BY id DESC LIMIT 1;
     SQL
+    row = connection.exec_query(sql) 
 
     init_object_from_row(row)
   end
