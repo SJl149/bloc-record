@@ -40,10 +40,6 @@ module Persistence
     self.class.destroy(self.id)
   end
 
-  def destroy_all
-    self.class.destroy_all
-  end
-
   module ClassMethods
     def create(attrs)
       attrs = BlocRecord::Utility.convert_keys(attrs)
