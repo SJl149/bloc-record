@@ -6,7 +6,6 @@ module BlocRecord
     end
 
     def take
-      ids = self.map(&:id)
       row = connection.get_first_row <<-SQL
         SELECT #{columns.join ","} FROM #{table}
         ORDER BY random()
@@ -17,33 +16,13 @@ module BlocRecord
     end
 
     def where(*args)
-      if args.count > 1
-        expression = args.shift
-        params = args
-      else
-        case args.first
-        when String
-          expression = args.first
-        when Hash
-          expression_hash = BlocRecord::Utility.convert_keys(args.first)
-          expression = expression_hash.map { |key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
-        end
-      end
-
-      sql = <<-SQL
-        SELECT #{columns.join ","} FROM #{table}
-        WHERE #{expression};
-      SQL
-
-      rows = connection.execute(sql, params)
-      rows_to_array(rows)
+      self.any? ? self.first.class.where(args) : false
     end
 
     def not(args)
-      experession = args.shift
-      params = args
-      ids = self.map(&:id)
-      self.any? ? self.first.class.where(ids, args) : false
+      not_key = args.shift.to_s
+      not_value = args
+      self.any? ? self.map { |pair| pair.delete_if {|key, value| key == not_key && value == not_value} }.compact : false
     end
 
     private

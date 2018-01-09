@@ -28,8 +28,6 @@ module Persistence
     true
   end
 
-
-
   def update_attribute(attribute, value)
     self.class.update(self.id, { attribute => value })
   end
@@ -88,5 +86,4 @@ module Persistence
     end
 
   end
-
 end
