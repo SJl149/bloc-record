@@ -5,14 +5,8 @@ module BlocRecord
       self.any? ? self.first.class.update(ids, updates) : false
     end
 
-    def take
-      row = connection.get_first_row <<-SQL
-        SELECT #{columns.join ","} FROM #{table}
-        ORDER BY random()
-        LIMIT 1;
-      SQL
-
-      init_object_from_row(row)
+    def take(num=1)
+      self.any? ? self.sample(num) : false
     end
 
     def where(*args)
@@ -24,20 +18,5 @@ module BlocRecord
       not_value = args
       self.any? ? self.map { |pair| pair.delete_if {|key, value| key == not_key && value == not_value} }.compact : false
     end
-
-    private
-    def init_object_from_row(row)
-      if row
-        data = Hash[columns.zip(row)]
-        new(data)
-      end
-    end
-
-    def rows_to_array(rows)
-      collection = BlocRecord::Collection.new
-      rows.each { |row| collection << new(Hash[columns.zip(row)]) }
-      collection
-    end
-
   end
 end
